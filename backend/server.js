@@ -2,7 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const connectDB = require("./src/config/db");
-
+const {errorHandler} = require("./src/middlewares/errorMiddleware");
 // Routes
 const authRoutes = require("./src/routes/authRoutes");
 const inventoryRoutes = require("./src/routes/inventoryRoutes");
@@ -25,9 +25,7 @@ app.use("/api/sales", salesRoutes);
 app.use("/api/customers", customerRoutes);
 
 // Error middleware
-app.use((err, req, res, next) => {
-  res.status(500).json({ message: err.message });
-});
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
