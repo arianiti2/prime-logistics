@@ -18,3 +18,5 @@ export const routes: Routes = [
   { path: 'sales', component: Sales, canActivate: [AuthGuard] },
   { path: '**', redirectTo: '/login' } 
 ];
+
+
