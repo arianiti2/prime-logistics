@@ -1,2 +1,24 @@
 
-<router-outlet />
+<div class="flex min-h-screen">
+
+  <aside class="w-64 bg-gray-800 text-white p-5 flex flex-col justify-between">
+    <div>
+      <h1 class="text-xl font-bold mb-4">My App</h1>
+      <nav class="flex flex-col gap-3">
+        <a routerLink="/dashboard" routerLinkActive="font-bold" class="hover:text-indigo-400">Dashboard</a>
+        <a routerLink="/users" routerLinkActive="font-bold" class="hover:text-indigo-400">Users</a>
+        <a routerLink="/settings" routerLinkActive="font-bold" class="hover:text-indigo-400">Settings</a>
+      </nav>
+    </div>
+
+
+    <button (click)="logout()" class="mt-5 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+      Logout
+    </button>
+  </aside>
+
+  
+  <main class="flex-1 p-6 bg-gray-100 overflow-auto">
+    <router-outlet></router-outlet>
+  </main>
+</div>
