@@ -28,6 +28,9 @@ export class Register {
       password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }
+goToLogin() {
+  this.router.navigate(['/login']);
+}
 
  submit() {
   if (this.registerForm.invalid) return;

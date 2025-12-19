@@ -1,7 +1,7 @@
 <form
   [formGroup]="registerForm"
   (ngSubmit)="submit()"
-  class="min-w-screen min-h-screen bg-gray-900 flex items-center justify-center px-5 py-5"
+  class="min-w-screen min-h-screen bg-gray-900 flex flex-col items-center justify-center px-5 py-5"
 >
   <div
     class="bg-gray-100 text-gray-500 rounded-3xl shadow-xl w-full overflow-hidden"
@@ -94,7 +94,16 @@
       </div>
     </div>
   </div>
+    <div class="mt-6 text-center">
+    <p class="text-gray-400 mb-2">Already have an account?</p>
+    <button type="button" (click)="goToLogin()"
+            class="bg-gray-500 hover:bg-gray-700 text-white rounded-lg px-6 py-2 font-semibold transition cursor-pointer">
+      Login
+    </button>
+  </div>
+
 </form>
+
 @if (successMessage()) {
   <div class="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg animate-slide-in">
     {{ successMessage() }}
