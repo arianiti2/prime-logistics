@@ -1,25 +1,77 @@
-<div class="flex min-h-screen">
+<div class="flex min-h-screen bg-gray-100">
   
 
   @if (!hideSidebar()) {
-    <aside class="w-64 bg-gray-800 text-white p-5 flex flex-col justify-between">
+    <aside class="w-64 bg-gray-800 text-white p-5 flex flex-col justify-between shrink-0">
       <div>
-        <h1 class="text-xl font-bold mb-4">My App</h1>
+        <h1 class="text-xl font-bold mb-6">My App</h1>
+
+        
+        <div class="flex flex-col items-center gap-3 mb-6 pb-6 border-b border-gray-700">
+          
+      
+          <button
+            type="button"
+            class="relative group focus:outline-none cursor-pointer"
+            (click)="fileInput.click()"
+          >
+      
+            <img
+              [src]="userAvatar() ? 'http://localhost:5000' + userAvatar() : 'assets/default-avatar.png'"
+              class="w-24 h-24 rounded-full border-2 border-indigo-500 object-cover 
+                     transition-transform duration-300 group-hover:scale-105"
+              alt="Profile"
+            />
+
+            <div class="absolute inset-0 rounded-full bg-black/50 flex flex-col items-center 
+                        justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <svg class="w-5 h-5 mb-1 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span class="text-[10px] uppercase font-bold text-white">Update</span>
+            </div>
+          </button>
+
+          <input
+            #fileInput
+            type="file"
+            accept="image/*"
+            (change)="onFileSelected($event)"
+            class="hidden"
+          />
+
+       
+          <div class="text-center">
+            <p class="text-sm font-semibold text-gray-100">{{ userName() }}</p>
+            <p class="text-[10px] text-gray-400 uppercase tracking-tighter">Click photo to change</p>
+          </div>
+        </div>
+
+    
         <nav class="flex flex-col gap-3">
-          <a routerLink="/dashboard" routerLinkActive="font-bold" class="hover:text-indigo-400">Dashboard</a>
-          <a routerLink="/users" routerLinkActive="font-bold" class="hover:text-indigo-400">Users</a>
-          <a routerLink="/settings" routerLinkActive="font-bold" class="hover:text-indigo-400">Settings</a>
+          <a routerLink="/dashboard" routerLinkActive="bg-gray-900 text-indigo-400 font-bold" 
+             class="px-3 py-2 rounded transition hover:text-indigo-400">Dashboard</a>
+          <a routerLink="/users" routerLinkActive="bg-gray-900 text-indigo-400 font-bold" 
+             class="px-3 py-2 rounded transition hover:text-indigo-400">Users</a>
+          <a routerLink="/settings" routerLinkActive="bg-gray-900 text-indigo-400 font-bold" 
+             class="px-3 py-2 rounded transition hover:text-indigo-400">Settings</a>
         </nav>
       </div>
 
-      <button (click)="logout()" class="mt-5 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+    
+      <button 
+        (click)="logout()" 
+        class="mt-5 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-medium transition"
+      >
         Logout
       </button>
     </aside>
   }
 
 
-  <main class="flex-1 p-6 bg-gray-100 overflow-auto">
+  <main class="flex-1 p-8 overflow-auto">
     <router-outlet></router-outlet>
   </main>
+
 </div>
