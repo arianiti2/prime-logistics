@@ -5,7 +5,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { filter, map } from 'rxjs';
 import { environment } from './environment/environment';
-
 @Component({
   selector: 'app-root',
   standalone: true,

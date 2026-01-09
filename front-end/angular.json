@@ -13,6 +13,7 @@
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
+      "i18n": { "sourceLocale": { "code": "en", "subPath": "" } },
       "architect": {
         "build": {
           "builder": "@angular/build:application",

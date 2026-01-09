@@ -1,1 +1,148 @@
-<p>customers works!</p>
+<div class="p-6 bg-gray-50 min-h-screen">
+  <div class="max-w-6xl mx-auto">
+    
+   
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+      <div class="bg-gray-900 px-6 py-4">
+        <h2 class="text-white font-semibold text-lg">Register New Customer</h2>
+      </div>
+
+      <form [formGroup]="customerForm" (ngSubmit)="onSubmit()" class="p-6">
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <mat-form-field appearance="outline">
+            <mat-label>Company Name</mat-label>
+            <input matInput formControlName="name">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Contact Person</mat-label>
+            <input matInput formControlName="contactPerson">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Email Address</mat-label>
+            <input matInput formControlName="email">
+          </mat-form-field>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <input matInput formControlName="phone">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+              <mat-option value="Active">Active</mat-option>
+              <mat-option value="Inactive">Inactive</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Priority</mat-label>
+            <mat-select formControlName="priority">
+              <mat-option value="Low">Low</mat-option>
+              <mat-option value="Medium">Medium</mat-option>
+              <mat-option value="High">High</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Credit Limit</mat-label>
+            <input matInput type="number" formControlName="creditLimit">
+          </mat-form-field>
+        </div>
+
+        <mat-divider class="mb-6"></mat-divider>
+
+        <h3 class="font-bold text-gray-700 mb-4">Billing Address</h3>
+        <div formGroupName="billingAddress" class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+          <div class="md:col-span-2">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Street</mat-label>
+              <input matInput formControlName="street">
+            </mat-form-field>
+          </div>
+          <mat-form-field appearance="outline">
+            <mat-label>City</mat-label>
+            <input matInput formControlName="city">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Zip Code</mat-label>
+            <input matInput formControlName="zip">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Country</mat-label>
+            <input matInput formControlName="country">
+          </mat-form-field>
+        </div>
+
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-gray-700">Shipping Addresses</h3>
+          <button type="button" mat-stroked-button color="primary" (click)="addShippingAddress()">
+            <mat-icon>add</mat-icon> Add Location
+          </button>
+        </div>
+
+        <div formArrayName="shippingAddresses">
+          @for (address of shippingAddresses.controls; track $index) {
+            <div [formGroupName]="$index" class="p-4 bg-gray-50 rounded-lg mb-4 border border-dashed border-gray-300 relative">
+              <button type="button" (click)="removeShippingAddress($index)" class="absolute top-2 right-2 text-red-500">
+                <mat-icon>delete</mat-icon>
+              </button>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <mat-form-field appearance="outline">
+                  <mat-label>Label (e.g. Warehouse 1)</mat-label>
+                  <input matInput formControlName="label">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="md:col-span-2">
+                  <mat-label>Street</mat-label>
+                  <input matInput formControlName="street">
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>City</mat-label>
+                  <input matInput formControlName="city">
+                </mat-form-field>
+              </div>
+            </div>
+          } @empty {
+            <p class="text-sm text-gray-500 italic mb-6">No shipping addresses added.</p>
+          }
+        </div>
+
+        <div class="mt-4">
+          <button mat-flat-button color="primary" class="w-full py-6" [disabled]="customerForm.invalid">
+            Save Customer Record
+          </button>
+        </div>
+      </form>
+    </div>
+
+  
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="bg-gray-50 border-b border-gray-200 text-gray-600 text-sm uppercase">
+          <tr>
+            <th class="px-6 py-4">Customer</th>
+            <th class="px-6 py-4">Contact</th>
+            <th class="px-6 py-4">Billing City</th>
+            <th class="px-6 py-4">Status</th>
+            <th class="px-6 py-4">Credit</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (item of customers(); track item.email) {
+            <tr class="hover:bg-blue-50 transition-colors">
+              <td class="px-6 py-4 font-medium text-gray-900">{{ item.name }}</td>
+              <td class="px-6 py-4 text-gray-600">{{ item.contactPerson }}</td>
+              <td class="px-6 py-4 text-gray-600">{{ item.billingAddress.city }}</td>
+              <td class="px-6 py-4">
+                <span [class]="item.status === 'Active' ? 'bg-green-100 text-green-700 px-2 py-1 rounded text-xs' : 'bg-red-100 text-red-700 px-2 py-1 rounded text-xs'">
+                  {{ item.status }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-gray-600 font-mono">${{ item.creditLimit | number }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
