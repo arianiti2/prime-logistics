@@ -1,4 +1,4 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, FormArray, FormBuilder } from '@angular/forms';
 import { CustomersService } from '../../services/customers.service';
@@ -18,13 +18,16 @@ import { MatDividerModule } from '@angular/material/divider';
   ],
   templateUrl: './customers.html'
 })
-export class Customers {
+export class Customers implements OnInit{
   private fb = inject(FormBuilder);
   private customersService = inject(CustomersService);
   
   
   customers = signal<any[]>([]);
 
+  ngOnInit(): void {
+    this.loadCustomers();
+  }
 
   customerForm = this.fb.group({
     customerId: [''],
@@ -66,7 +69,16 @@ export class Customers {
     });
     this.shippingAddresses.push(addressGroup);
   }
-
+  loadCustomers() {
+    this.customersService.getAll().subscribe({
+      next: (data) => {
+        this.customers.set(data);
+      },
+      error: (err) => {
+        console.error('Error fetching customers:', err);
+      }
+    });
+  }
   removeShippingAddress(index: number) {
     this.shippingAddresses.removeAt(index);
   }
