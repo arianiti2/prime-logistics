@@ -1,4 +1,4 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, signal, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, FormArray, FormBuilder } from '@angular/forms';
 import { CustomersService } from '../../services/customers.service';
@@ -28,6 +28,7 @@ export class Customers implements OnInit{
   private fb = inject(FormBuilder);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private _changeDetectorRef = inject(ChangeDetectorRef);
   private customersService = inject(CustomersService);
    dialogRef!: MatDialogRef<any>; 
   
@@ -89,7 +90,7 @@ export class Customers implements OnInit{
       if (updatedCustomer) {
         // update the local signal array
         this.customers.update(list => list.map(c => c.customerId === updatedCustomer.customerId ? updatedCustomer : c));
-
+        this._changeDetectorRef.markForCheck();
          this.snackBar.open('Customer updated successfully!', 'Close', {
   duration: 3000,
   horizontalPosition: 'end',
