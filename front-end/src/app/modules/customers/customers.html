@@ -129,28 +129,39 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
-          @for (item of customers(); track item.email) {
-            <tr class="hover:bg-blue-50 transition-colors">
-              <td class="px-6 py-4 font-medium text-gray-900">{{ item.name }}</td>
-              <td class="px-6 py-4 text-gray-600">{{ item.contactPerson }}</td>
-              <td class="px-6 py-4 text-gray-600">{{ item.billingAddress.city }}</td>
-              <td class="px-6 py-4">
-                <span [class]="item.status === 'Active' ? 'bg-green-100 text-green-700 px-2 py-1 rounded text-xs' : 'bg-red-100 text-red-700 px-2 py-1 rounded text-xs'">
-                  {{ item.status }}
-                </span>
-              </td>
-              <td class="px-6 py-4 text-gray-600 font-mono">${{ item.creditLimit | number }}</td>
-               <td class="px-6 py-4">
-      <button mat-icon-button color="primary" (click)="openEditDialog(item)">
-        <mat-icon>edit</mat-icon>
-      </button>
+  @for (item of customers(); track item.email) {
+    <tr class="hover:bg-blue-50 transition-colors">
+      <td class="px-6 py-4 font-medium text-gray-900">{{ item.name }}</td>
+      <td class="px-6 py-4 text-gray-600">{{ item.contactPerson }}</td>
+      <td class="px-6 py-4 text-gray-600">{{ item.billingAddress.city }}</td>
+      <td class="px-6 py-4">
+        <span [class]="item.status === 'Active' ? 'bg-green-100 text-green-700 px-2 py-1 rounded text-xs' : 'bg-red-100 text-red-700 px-2 py-1 rounded text-xs'">
+          {{ item.status }}
+        </span>
+      </td>
+      <td class="px-6 py-4 text-gray-600 font-mono">${{ item.creditLimit | number }}</td>
+      <td class="px-6 py-4">
+        <button mat-icon-button color="primary" (click)="openEditDialog(item)">
+          <mat-icon>edit</mat-icon>
+        </button>
         <button mat-icon-button color="warn" (click)="deleteCustomer(item)">
-    <mat-icon>delete</mat-icon>
-  </button>
-    </td>
-            </tr>
-          }
-        </tbody>
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </tr>
+  } @empty {
+  
+    <tr>
+      <td colspan="6" class="px-6 py-12 text-center">
+        <div class="flex flex-col items-center justify-center text-gray-500">
+          <mat-icon class="text-gray-300 mb-2" style="font-size: 48px; width: 48px; height: 48px;">person_off</mat-icon>
+          <p class="text-lg font-medium">No customer registered!</p>
+          <p class="text-sm">Use the form above to add your first customer.</p>
+        </div>
+      </td>
+    </tr>
+  }
+</tbody>
       </table>
     </div>
   </div>
