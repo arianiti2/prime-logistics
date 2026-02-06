@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const { getCustomers, getCustomerById, createCustomer, updateCustomer, deleteCustomer } = require("../controllers/customerController");
+const { getCustomers, getCustomerById, createCustomer, updateCustomer, deleteCustomer, downloadAttachment, upload } = require("../controllers/customerController");
 
 router.get("/", getCustomers);
 router.get("/:id", getCustomerById);
-router.post("/", createCustomer);
+router.get("/:id/download", downloadAttachment);
+router.post("/", upload.single('attachment'), createCustomer);
 router.put("/:id", updateCustomer);
 router.delete("/:id", deleteCustomer);
 

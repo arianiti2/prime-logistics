@@ -14,6 +14,36 @@
             <mat-label>Company Name</mat-label>
             <input matInput formControlName="name">
           </mat-form-field>
+          <!-- <mat-form-field appearance="outline">
+  <mat-label>Registration Date</mat-label>
+  <input  (dateChange)="onDateChange($event)" matInput [matDatepicker]="picker" formControlName="dateDite">
+  <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+  <mat-datepicker #picker></mat-datepicker>
+</mat-form-field> -->
+<div class="flex flex-col gap-4">
+  <!-- Hidden File Input & Trigger Button -->
+  <div class="flex items-center gap-2">
+    <input type="file" #fileInput class="hidden" (change)="onFileSelected($event)" accept="image/*">
+    <button type="button" mat-stroked-button (click)="fileInput.click()" class="w-full">
+      <mat-icon>attach_file</mat-icon> 
+      {{ customerForm.get('fileName')?.value || 'Upload Document' }}
+    </button>
+  </div>
+
+  <!-- Modern @if Control Flow for Preview -->
+ @if (imagePreviewUrl()) {
+  <div class="mt-4 relative w-32 h-32 border rounded-lg overflow-hidden group shadow-sm">
+    <img [src]="imagePreviewUrl()" class="w-full h-full object-cover" alt="Preview">
+    
+    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+      <!-- <button type="button" mat-icon-button color="warn" (click)="clearFile()">
+        <mat-icon>delete</mat-icon>
+      </button> -->
+    </div>
+  </div>
+}
+</div>
+
           <mat-form-field appearance="outline">
             <mat-label>Contact Person</mat-label>
             <input matInput formControlName="contactPerson">
@@ -120,8 +150,10 @@
       <table class="w-full text-left">
         <thead class="bg-gray-50 border-b border-gray-200 text-gray-600 text-sm uppercase">
           <tr>
+            <th class="px-6 py-4">Image</th>
             <th class="px-6 py-4">Customer</th>
             <th class="px-6 py-4">Contact</th>
+            <th class="px-6 py-4">Date</th>
             <th class="px-6 py-4">Billing City</th>
             <th class="px-6 py-4">Status</th>
             <th class="px-6 py-4">Credit</th>
@@ -131,8 +163,36 @@
         <tbody class="divide-y divide-gray-100">
   @for (item of customers(); track item.email) {
     <tr class="hover:bg-blue-50 transition-colors">
+      <td class="px-6 py-4 text-center">
+        @if (item.attachmentPath && item.fileName) {
+          @if (isImageFile(item.fileName)) {
+            <div class="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:shadow-md transition-shadow"
+                 (click)="viewImage(item)">
+              <img [src]="getImageUrl(item.attachmentPath)" 
+                   class="w-full h-full object-cover" 
+                   [alt]="item.fileName"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+              <div class="w-full h-full bg-gray-100 flex items-center justify-center" style="display: none;">
+                <mat-icon class="text-gray-400 text-sm">image</mat-icon>
+              </div>
+            </div>
+          } @else {
+            <button mat-icon-button (click)="downloadAttachment(item)" 
+                    title="Download {{ item.fileName }}" 
+                    class="text-blue-600">
+              <mat-icon>{{ getFileIcon(item.fileName) }}</mat-icon>
+            </button>
+          }
+        } @else {
+          <mat-icon class="text-gray-300">remove</mat-icon>
+        }
+      </td>
       <td class="px-6 py-4 font-medium text-gray-900">{{ item.name }}</td>
       <td class="px-6 py-4 text-gray-600">{{ item.contactPerson }}</td>
+      <td class="px-6 py-4 text-gray-600">
+  {{ item.dateDite | date:'MMM d, y, h:mm a' }}
+</td>
+
       <td class="px-6 py-4 text-gray-600">{{ item.billingAddress.city }}</td>
       <td class="px-6 py-4">
         <span [class]="item.status === 'Active' ? 'bg-green-100 text-green-700 px-2 py-1 rounded text-xs' : 'bg-red-100 text-red-700 px-2 py-1 rounded text-xs'">
@@ -152,7 +212,7 @@
   } @empty {
   
     <tr>
-      <td colspan="6" class="px-6 py-12 text-center">
+      <td colspan="8" class="px-6 py-12 text-center">
         <div class="flex flex-col items-center justify-center text-gray-500">
           <mat-icon class="text-gray-300 mb-2" style="font-size: 48px; width: 48px; height: 48px;">person_off</mat-icon>
           <p class="text-lg font-medium">No customer registered!</p>

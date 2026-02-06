@@ -25,6 +25,7 @@ const customerSchema = mongoose.Schema(
         country: { type: String }
       }
     ],
+    
     paymentTerms: { type: String, default: 'Net 30' },
     taxNumber: { type: String },
     preferredCurrency: { type: String, default: 'USD' },
@@ -33,6 +34,8 @@ const customerSchema = mongoose.Schema(
     priority: { type: String, default: 'Medium' },
     specialInstructions: { type: String },
     status: { type: String, default: 'Active' },
+    attachmentPath: { type: String },
+    fileName: { type: String },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   },
   { timestamps: true }
