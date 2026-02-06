@@ -14,7 +14,7 @@
   color: white !important;
 }
 
-/* File upload button styling */
+
 .file-upload-button {
   position: relative;
   overflow: hidden;
@@ -30,7 +30,6 @@
   cursor: pointer;
 }
 
-/* Image preview styling */
 .image-preview-container {
   position: relative;
   width: 80px;
@@ -78,14 +77,14 @@
   font-size: 24px !important;
 }
 
-/* File upload container styling */
+
 .file-upload-container {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Button with file styling */
+
 .has-file {
   background-color: #4caf50 !important;
 }
@@ -98,7 +97,7 @@
   max-width: 200px;
 }
 
-/* Responsive table improvements */ 
+
 @media (max-width: 768px) {
   .overflow-x-auto table {
     min-width: 800px;
@@ -110,7 +109,7 @@
   }
 }
 
-/* File attachment indicator */
+
 .attachment-indicator {
   transition: all 0.2s ease;
 }
