@@ -60,6 +60,19 @@
             <mat-label>Contact Person</mat-label>
             <input matInput formControlName="contactPerson">
           </mat-form-field>
+<mat-form-field appearance="outline">
+  <mat-label>Registration Date</mat-label>
+  <input 
+    matInput 
+    [matDatepicker]="picker" 
+    formControlName="registrationDate" 
+    [min]="minDate"
+    [matDatepickerFilter]="dateFilter"
+    readonly>
+  <mat-hint>DD.MM.YYYY</mat-hint>
+  <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+  <mat-datepicker #picker></mat-datepicker>
+</mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Email Address</mat-label>
@@ -249,9 +262,10 @@
 
               <td class="px-6 py-4 font-medium">{{ item.name }}</td>
               <td class="px-6 py-4">{{ item.contactPerson }}</td>
-              <td class="px-6 py-4">
-                {{ item.dateDite | date:'MMM d, y, h:mm a' }}
-              </td>
+            <td class="px-6 py-4">
+  {{ item.registrationDate | date:'dd.MM.yyyy' }}
+</td>
+
               <td class="px-6 py-4">{{ item.billingAddress.city }}</td>
 
               <td class="px-6 py-4">

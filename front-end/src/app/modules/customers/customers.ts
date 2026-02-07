@@ -27,8 +27,10 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
+import { MatNativeDateModule, MAT_DATE_LOCALE, MAT_DATE_FORMATS, DateAdapter } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { CustomDateAdapter, MY_DATE_FORMATS } from '../../helpers/custom-date-adapter';
+
 
 @Component({
   selector: 'app-customers',
@@ -50,9 +52,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatNativeDateModule,
     MatTooltipModule
   ],
-  providers: [
-    { provide: MAT_DATE_LOCALE, useValue: 'en-GB' }
-  ]
+   providers: [
+    { provide: DateAdapter, useClass: CustomDateAdapter },
+    { provide: MAT_DATE_FORMATS, useValue: MY_DATE_FORMATS },
+  ],
 })
 export class Customers implements OnInit {
 
@@ -75,6 +78,17 @@ export class Customers implements OnInit {
   >([]);
 
   selectedFile = signal<File | null>(null);
+
+  // Date constraints - set to start of today to prevent past dates
+  readonly minDate = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+  
+  // Date filter to disable past dates
+  dateFilter = (date: Date | null): boolean => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (!date) return false;
+    return date >= today;
+  };
 
   /* ===================== LIFECYCLE ===================== */
   ngOnInit(): void {
@@ -108,7 +122,7 @@ export class Customers implements OnInit {
     attachment: this.fb.control<File | null>(null),
     fileName: [''],
 
-    dateDite: [new Date()],
+    registrationDate: [new Date()],
     customerType: ['Company'],
     priority: ['Medium'],
     specialInstructions: [''],
@@ -186,6 +200,9 @@ export class Customers implements OnInit {
         this.sanitizer.bypassSecurityTrustUrl(rawUrl);
 
       this.imagePreviewUrl.set(safeUrl);
+      
+
+      this._changeDetectorRef.markForCheck();
     }
 
     this.customerForm.patchValue({
@@ -287,7 +304,7 @@ export class Customers implements OnInit {
 
       const customerData = {
         ...rawValue,
-        dateDite: this.formatDateOnly(rawValue.dateDite)
+        registrationDate: this.formatDateOnly(rawValue.registrationDate)
       };
 
       delete customerData.attachment;
@@ -318,7 +335,7 @@ export class Customers implements OnInit {
     } else {
       const payload = {
         ...rawValue,
-        dateDite: this.formatDateOnly(rawValue.dateDite)
+        registrationDate: this.formatDateOnly(rawValue.registrationDate)
       };
 
       delete payload.attachment;
@@ -353,7 +370,7 @@ export class Customers implements OnInit {
       status: 'Active',
       preferredCurrency: 'USD',
       paymentTerms: 'Net 30',
-      dateDite: new Date(),
+      registrationDate: new Date(),
       attachment: null,
       fileName: ''
     });

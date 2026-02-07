@@ -52,6 +52,21 @@
       </header>
     }
 
+    
+    @if (!hideSidebar() || isSidebarHidden()) {
+      <div class="absolute top-4 left-4 z-10" [class.left-80]="!isSidebarHidden()">
+        <button 
+          (click)="toggleSidebar()" 
+          class="p-2 bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:bg-slate-50"
+          title="Toggle sidebar"
+        >
+          <svg class="w-5 h-5 text-slate-600 transition-transform duration-200" [class.rotate-180]="isSidebarHidden()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+      </div>
+    }
+
    
     <div [class.p-8]="!hideSidebar()" class="flex-1 overflow-auto">
       <div [class.max-w-7xl]="!hideSidebar()" class="mx-auto h-full">

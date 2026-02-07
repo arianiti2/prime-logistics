@@ -34,6 +34,7 @@ const customerSchema = mongoose.Schema(
     priority: { type: String, default: 'Medium' },
     specialInstructions: { type: String },
     status: { type: String, default: 'Active' },
+    registrationDate: { type: Date, default: Date.now },
     attachmentPath: { type: String },
     fileName: { type: String },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }

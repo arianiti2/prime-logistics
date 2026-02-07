@@ -20,6 +20,7 @@ export class App implements OnInit {
 
   protected userAvatar = signal<string | null>(null);
   protected userName = signal<string>('User');
+  protected isSidebarHidden = signal<boolean>(false); 
 
  
   private readonly currentUrl = toSignal(
@@ -52,7 +53,12 @@ export class App implements OnInit {
 
   protected hideSidebar() {
     const url = this.currentUrl() || '';
-    return url.includes('/login') || url.includes('/register');
+    const urlBasedHiding = url.includes('/login') || url.includes('/register');
+    return urlBasedHiding || this.isSidebarHidden();
+  }
+
+  protected toggleSidebar(): void {
+    this.isSidebarHidden.update(hidden => !hidden);
   }
 
  
