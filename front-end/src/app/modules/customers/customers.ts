@@ -108,11 +108,11 @@ export class Customers implements OnInit {
     alternatePhone: [''],
 
     billingAddress: this.fb.group({
-      street: [''],
-      city: [''],
+      street: ['', Validators.required],
+      city: ['', Validators.required],
       state: [''],
       zip: [''],
-      country: ['']
+      country: ['', Validators.required]
     }),
 
     shippingAddresses: this.fb.array([]),
@@ -129,6 +129,7 @@ export class Customers implements OnInit {
     customerType: ['Company'],
     priority: ['Medium'],
     specialInstructions: [''],
+    internalNotes: [''],
     status: ['Active']
   });
 
@@ -495,18 +496,32 @@ export class Customers implements OnInit {
   }
 
   /* ===================== HELPERS ===================== */
-  private resetForm(): void {
+  resetForm(): void {
     this.customerForm.reset({
       status: 'Active',
       preferredCurrency: 'USD',
       paymentTerms: 'Net 30',
+      priority: 'Medium',
       registrationDate: new Date(),
+      creditLimit: 0,
+      specialInstructions: '',
+      internalNotes: '',
       attachment: null,
       fileName: ''
     });
 
     this.shippingAddresses.clear();
     this.selectedFile.set(null);
+    this.imagePreviewUrl.set(null);
+    
+    this._changeDetectorRef.markForCheck();
+    
+    this.snackBar.open('Form reset successfully', 'Close', {
+      duration: 2000,
+      horizontalPosition: 'end',
+      verticalPosition: 'top',
+      panelClass: ['snackbar-success']
+    });
   }
 
   formatDateOnly(value: any): string | null {
