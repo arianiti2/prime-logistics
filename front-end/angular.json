@@ -2,6 +2,9 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
+     "cache": {
+    "enabled": false
+  },
     "packageManager": "npm",
     "analytics": false
   },
@@ -12,8 +15,14 @@
       "schematics": {},
       "root": "",
       "sourceRoot": "src",
-      "prefix": "app",
-      "i18n": { "sourceLocale": { "code": "en", "subPath": "" } },
+  "prefix": "app",
+"i18n": {
+  "sourceLocale": {
+    "code": "en",
+    "subPath": ""
+  }
+},
+
       "architect": {
         "build": {
           "builder": "@angular/build:application",

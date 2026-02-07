@@ -29,7 +29,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_LOCALE, MAT_DATE_FORMATS, DateAdapter } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { CustomDateAdapter, MY_DATE_FORMATS } from '../../helpers/custom-date-adapter';
+
 
 
 @Component({
@@ -52,7 +55,7 @@ import { CustomDateAdapter, MY_DATE_FORMATS } from '../../helpers/custom-date-ad
     MatNativeDateModule,
     MatTooltipModule
   ],
-   providers: [
+ providers: [
     { provide: DateAdapter, useClass: CustomDateAdapter },
     { provide: MAT_DATE_FORMATS, useValue: MY_DATE_FORMATS },
   ],
@@ -288,6 +291,133 @@ export class Customers implements OnInit {
         }
       });
     }
+  }
+
+  /* ===================== PDF EXPORT ===================== */
+  exportToPDF(customer: any): void {
+    const doc = new jsPDF();
+    
+  
+    doc.setFontSize(20);
+    doc.setTextColor(40, 40, 40);
+    doc.text('CUSTOMER INFORMATION', 20, 20);
+    
+  
+    doc.setFontSize(16);
+    doc.setTextColor(60, 60, 60);
+    doc.text(customer.name || 'N/A', 20, 35);
+    
+  
+    const today = new Date();
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generated: ${today.toLocaleDateString('de-DE')}`, 150, 20);
+    
+ 
+    const customerData = [
+      ['Customer ID', customer.customerId || 'N/A'],
+      ['Company Name', customer.name || 'N/A'],
+      ['Contact Person', customer.contactPerson || 'N/A'],
+      ['Email', customer.email || 'N/A'],
+      ['Phone', customer.phone || 'N/A'],
+      ['Alternate Phone', customer.alternatePhone || 'N/A'],
+      ['Status', customer.status || 'N/A'],
+      ['Priority', customer.priority || 'N/A'],
+      ['Customer Type', customer.customerType || 'N/A'],
+      ['Credit Limit', customer.creditLimit ? `$${customer.creditLimit.toLocaleString()}` : '$0'],
+      ['Payment Terms', customer.paymentTerms || 'N/A'],
+      ['Preferred Currency', customer.preferredCurrency || 'N/A'],
+      ['Registration Date', customer.registrationDate ? 
+        new Date(customer.registrationDate).toLocaleDateString('de-DE') : 'N/A']
+    ];
+
+ 
+    autoTable(doc, {
+      head: [['Field', 'Value']],
+      body: customerData,
+      startY: 45,
+      theme: 'striped',
+      headStyles: { fillColor: [66, 66, 66] },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      margin: { left: 20, right: 20 }
+    });
+
+ 
+    let currentY = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : 130;
+    doc.setFontSize(14);
+    doc.setTextColor(40, 40, 40);
+    doc.text('BILLING ADDRESS', 20, currentY);
+
+    const billingData = [
+      ['Street', customer.billingAddress?.street || 'N/A'],
+      ['City', customer.billingAddress?.city || 'N/A'],
+      ['State', customer.billingAddress?.state || 'N/A'],
+      ['ZIP Code', customer.billingAddress?.zip || 'N/A'],
+      ['Country', customer.billingAddress?.country || 'N/A']
+    ];
+
+    autoTable(doc, {
+      head: [['Field', 'Value']],
+      body: billingData,
+      startY: currentY + 5,
+      theme: 'striped',
+      headStyles: { fillColor: [66, 66, 66] },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      margin: { left: 20, right: 20 }
+    });
+
+   
+    if (customer.shippingAddresses && customer.shippingAddresses.length > 0) {
+      currentY = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : currentY + 100;
+      doc.setFontSize(14);
+      doc.text('SHIPPING ADDRESSES', 20, currentY);
+
+      customer.shippingAddresses.forEach((address: any, index: number) => {
+        const shippingData = [
+          ['Label', address.label || `Address ${index + 1}`],
+          ['Street', address.street || 'N/A'],
+          ['City', address.city || 'N/A'],
+          ['State', address.state || 'N/A'],
+          ['ZIP Code', address.zip || 'N/A'],
+          ['Country', address.country || 'N/A']
+        ];
+
+        autoTable(doc, {
+          head: [['Field', 'Value']],
+          body: shippingData,
+          startY: currentY + 5 + (index * 45),
+          theme: 'striped',
+          headStyles: { fillColor: [66, 66, 66] },
+          alternateRowStyles: { fillColor: [245, 245, 245] },
+          margin: { left: 20, right: 20 }
+        });
+        currentY = (doc as any).lastAutoTable?.finalY || currentY + 75;
+      });
+    }
+
+  
+    if (customer.specialInstructions) {
+      currentY = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : currentY + 15;
+      doc.setFontSize(14);
+      doc.text('SPECIAL INSTRUCTIONS', 20, currentY);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(60, 60, 60);
+      const splitText = doc.splitTextToSize(customer.specialInstructions, 160);
+      doc.text(splitText, 20, currentY + 10);
+    }
+
+   
+    const filename = `customer-${customer.name?.replace(/[^a-z0-9]/gi, '_')}-${today.toISOString().split('T')[0]}.pdf`;
+    doc.save(filename);
+
+ 
+    this.snackBar.open(`PDF exported: ${filename}`, 'Close', {
+      duration: 3000,
+      horizontalPosition: 'end',
+      verticalPosition: 'top',
+      panelClass: ['snackbar-success']
+    });
   }
 
   /* ===================== SUBMIT ===================== */
