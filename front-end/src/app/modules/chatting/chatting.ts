@@ -15,6 +15,8 @@ import { HttpClient } from '@angular/common/http';
 import { io, Socket } from 'socket.io-client';
 import { AuthService } from '../../core/auth.service';
 import { environment } from '../../environment/environment';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 type UserRef = {
   _id: string;
@@ -40,7 +42,7 @@ type TypingPayload = {
 @Component({
   selector: 'app-chatting',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatSnackBarModule],
   templateUrl: './chatting.html',
   styleUrl: './chatting.css'
 })
@@ -51,6 +53,7 @@ export class Chatting implements OnInit, OnDestroy {
 
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private snackBar = inject(MatSnackBar);
   private readonly apiBaseUrl = environment.apiUrl;
   private readonly socketBaseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
 
@@ -156,11 +159,23 @@ export class Chatting implements OnInit, OnDestroy {
       recipientEmail
     }).subscribe({
       next: () => {
-        alert('Request Sent!');
+          this.snackBar.open('Friend request sent successfully 🎉', 'Close', {
+    duration: 3000,
+    horizontalPosition: 'right',
+    verticalPosition: 'top',
+    panelClass: ['success-snackbar']
+  });
         this.emailSearch = '';
         this.showEmailSuggestions.set(false);
       },
-      error: (err) => alert(err?.error?.message || 'Failed to send request')
+      error: (err) => {
+        this.snackBar.open(err?.error?.message || 'Failed to send request', 'Close', {
+          duration: 3000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top',
+          panelClass: ['error-snackbar']
+        });
+      }
     });
   }
 
