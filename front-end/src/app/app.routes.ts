@@ -13,6 +13,7 @@ export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'login', component: Login },
   { path: 'register', component: Register },
+  { path: 'chatting', loadComponent: () => import('./modules/chatting/chatting').then(m => m.Chatting) },
   { path: 'dashboard', component: Dashboard, canActivate: [AuthGuard] },
   { path: 'customers', component: Customers, canActivate: [AuthGuard] },
   { path: 'inventory', component: Inventory, canActivate: [AuthGuard] },
