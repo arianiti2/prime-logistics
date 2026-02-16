@@ -1,5 +1,6 @@
 import { 
   Component, 
+  OnDestroy,
   OnInit, 
   signal, 
   inject, 
@@ -13,6 +14,28 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { io, Socket } from 'socket.io-client';
 import { AuthService } from '../../core/auth.service';
+import { environment } from '../../environment/environment';
+
+type UserRef = {
+  _id: string;
+  name?: string;
+  email?: string;
+  role?: string;
+};
+
+type ChatMessage = {
+  senderId: string;
+  recipientId: string;
+  text: string;
+  createdAt?: Date | string;
+  timestamp?: Date | string;
+};
+
+type TypingPayload = {
+  senderId: string;
+  recipientId: string;
+  isTyping: boolean;
+};
 
 @Component({
   selector: 'app-chatting',
@@ -21,74 +44,44 @@ import { AuthService } from '../../core/auth.service';
   templateUrl: './chatting.html',
   styleUrl: './chatting.css'
 })
-export class Chatting implements OnInit {
+export class Chatting implements OnInit, OnDestroy {
+  private static readonly EMAIL_SUGGESTIONS_LIMIT = 12;
+  private static readonly TYPING_DEBOUNCE_MS = 2000;
+  private static readonly EMAIL_BLUR_DELAY_MS = 120;
+
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private readonly apiBaseUrl = environment.apiUrl;
+  private readonly socketBaseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
+
   private socket!: Socket;
 
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
-  // State Management
-  public currentUser = this.authService.currentUser(); 
-  public messages = signal<any[]>([]);
+  public currentUser = this.authService.currentUser();
+  public messages = signal<ChatMessage[]>([]);
   public pendingRequests = signal<any[]>([]);
-  public friendsList = signal<any[]>([]);
+  public friendsList = signal<UserRef[]>([]);
   public allEmails = signal<string[]>([]);
   public showEmailSuggestions = signal<boolean>(false);
-  public activeChat = signal<any>(null);
-  
-  // Typing State
+  public activeChat = signal<UserRef | null>(null);
   public isFriendTyping = signal<boolean>(false);
-  private typingTimeout: any;
 
-  // Inputs
-  public emailSearch = '';
-  public newMessage = '';
+  private typingTimeout: any;
   private emailBlurTimeout: any;
 
-  constructor() {
-    effect(() => {
-      this.messages(); 
-      this.scrollToBottom();
-    });
-  }
-
-  ngOnInit() {
-    if (!this.currentUser || !this.currentUser._id) return;
-
-    this.socket = io('http://localhost:5000');
-    
-    this.socket.emit('join_room', this.currentUser._id);
-
-    this.socket.on('load_history', (history) => {
-      this.messages.set(history);
-    });
-
-    this.socket.on('receive_message', (msg: any) => {
-      this.messages.update(prev => [...prev, msg]);
-    });
-
-    // Typing Listener
-    this.socket.on('user_typing', (data: any) => {
-      // Only show typing if it's the person we are currently looking at
-      if (this.activeChat()?._id === data.senderId) {
-        this.isFriendTyping.set(data.isTyping);
-      }
-    });
-
-    this.loadPendingRequests();
-    this.loadFriends();
-    this.loadAllEmails();
-  }
+  public emailSearch = '';
+  public newMessage = '';
 
   public filteredMessages = computed(() => {
     const activeId = this.activeChat()?._id;
-    const currentId = this.currentUser._id;
-    if (!activeId) return [];
+    const currentId = this.currentUserId;
+    if (!activeId || !currentId) return [];
 
-    return this.messages().filter(m => 
-      (m.senderId === currentId && m.recipientId === activeId) ||
-      (m.senderId === activeId && m.recipientId === currentId)
+    return this.messages().filter(
+      (message) =>
+        (message.senderId === currentId && message.recipientId === activeId) ||
+        (message.senderId === activeId && message.recipientId === currentId)
     );
   });
 
@@ -96,53 +89,59 @@ export class Chatting implements OnInit {
     const query = this.emailSearch.trim().toLowerCase();
     const emails = this.allEmails();
 
-    if (!query) return emails.slice(0, 12);
+    if (!query) return emails.slice(0, Chatting.EMAIL_SUGGESTIONS_LIMIT);
 
     return emails
-      .filter(email => email.toLowerCase().includes(query))
-      .slice(0, 12);
+      .filter((email) => email.toLowerCase().includes(query))
+      .slice(0, Chatting.EMAIL_SUGGESTIONS_LIMIT);
   });
 
-  // Call this on (input) in HTML
+  constructor() {
+    effect(() => {
+      this.messages();
+      this.scrollToBottom();
+    });
+  }
+
+  ngOnInit() {
+    if (!this.currentUserId) return;
+
+    this.initializeSocket();
+
+    this.loadPendingRequests();
+    this.loadFriends();
+    this.loadAllEmails();
+  }
+
+  ngOnDestroy(): void {
+    if (this.typingTimeout) clearTimeout(this.typingTimeout);
+    if (this.emailBlurTimeout) clearTimeout(this.emailBlurTimeout);
+    if (this.socket) this.socket.disconnect();
+  }
+
   onTyping() {
     if (!this.activeChat()) return;
 
-    this.socket.emit('typing', {
-      senderId: this.currentUser._id,
-      recipientId: this.activeChat()._id,
-      isTyping: true
-    });
-
-    // Clear previous timeout and set a new one to stop typing indicator
+    this.emitTyping(true);
     clearTimeout(this.typingTimeout);
     this.typingTimeout = setTimeout(() => {
-      this.socket.emit('typing', {
-        senderId: this.currentUser._id,
-        recipientId: this.activeChat()._id,
-        isTyping: false
-      });
-    }, 2000);
+      this.emitTyping(false);
+    }, Chatting.TYPING_DEBOUNCE_MS);
   }
 
   sendMessage() {
     if (!this.newMessage.trim() || !this.activeChat()) return;
 
-    const data = {
-      senderId: this.currentUser._id,
-      recipientId: this.activeChat()._id,
-      text: this.newMessage
+    const data: ChatMessage = {
+      senderId: this.currentUserId,
+      recipientId: this.activeChat()!._id,
+      text: this.newMessage.trim()
     };
 
     this.socket.emit('send_message', data);
-    
-    // Stop typing indicator immediately on send
-    this.socket.emit('typing', {
-      senderId: this.currentUser._id,
-      recipientId: this.activeChat()._id,
-      isTyping: false
-    });
 
-    this.messages.update(prev => [...prev, { ...data, createdAt: new Date() }]);
+    this.emitTyping(false);
+    this.messages.update((previous) => [...previous, { ...data, createdAt: new Date() }]);
     this.newMessage = '';
   }
 
@@ -152,8 +151,8 @@ export class Chatting implements OnInit {
 
     this.emailSearch = recipientEmail;
 
-    this.http.post('http://localhost:5000/api/friends/request', {
-      senderId: this.currentUser._id,
+    this.http.post(`${this.apiBaseUrl}/friends/request`, {
+      senderId: this.currentUserId,
       recipientEmail
     }).subscribe({
       next: () => {
@@ -161,7 +160,7 @@ export class Chatting implements OnInit {
         this.emailSearch = '';
         this.showEmailSuggestions.set(false);
       },
-      error: (err) => alert(err.error.message)
+      error: (err) => alert(err?.error?.message || 'Failed to send request')
     });
   }
 
@@ -173,7 +172,7 @@ export class Chatting implements OnInit {
   onEmailInputBlur() {
     this.emailBlurTimeout = setTimeout(() => {
       this.showEmailSuggestions.set(false);
-    }, 120);
+    }, Chatting.EMAIL_BLUR_DELAY_MS);
   }
 
   onEmailSearchChange() {
@@ -185,17 +184,19 @@ export class Chatting implements OnInit {
   }
 
   loadAllEmails() {
-    this.http.get<string[]>(`http://localhost:5000/api/friends/emails/${this.currentUser._id}`)
-      .subscribe(res => this.allEmails.set(res));
+    this.http
+      .get<string[]>(`${this.apiBaseUrl}/friends/emails/${this.currentUserId}`)
+      .subscribe((emails) => this.allEmails.set(emails));
   }
 
   loadPendingRequests() {
-    this.http.get<any[]>(`http://localhost:5000/api/friends/pending/${this.currentUser._id}`)
-      .subscribe(res => this.pendingRequests.set(res));
+    this.http
+      .get<any[]>(`${this.apiBaseUrl}/friends/pending/${this.currentUserId}`)
+      .subscribe((requests) => this.pendingRequests.set(requests));
   }
 
   acceptFriendRequest(requestId: string) {
-    this.http.put('http://localhost:5000/api/friends/accept', { requestId })
+    this.http.put(`${this.apiBaseUrl}/friends/accept`, { requestId })
       .subscribe({
         next: () => {
           this.loadPendingRequests();
@@ -206,14 +207,53 @@ export class Chatting implements OnInit {
   }
 
   loadFriends() {
-    this.http.get<any[]>(`http://localhost:5000/api/friends/accepted/${this.currentUser._id}`)
-      .subscribe(res => this.friendsList.set(res));
+    this.http
+      .get<UserRef[]>(`${this.apiBaseUrl}/friends/accepted/${this.currentUserId}`)
+      .subscribe((friends) => this.friendsList.set(friends));
+  }
+
+  private initializeSocket(): void {
+    this.socket = io(this.socketBaseUrl);
+
+    this.socket.on('connect', () => {
+      this.socket.emit('join_room', this.currentUserId);
+    });
+
+    this.socket.on('load_history', (history: ChatMessage[]) => {
+      this.messages.set(history ?? []);
+    });
+
+    this.socket.on('receive_message', (message: ChatMessage) => {
+      this.messages.update((previous) => [...previous, message]);
+    });
+
+    this.socket.on('user_typing', (data: TypingPayload) => {
+      const activeId = this.activeChat()?._id;
+      if (activeId && activeId === data?.senderId) {
+        this.isFriendTyping.set(Boolean(data?.isTyping));
+      }
+    });
+  }
+
+  private emitTyping(isTyping: boolean): void {
+    const activeId = this.activeChat()?._id;
+    if (!activeId || !this.currentUserId) return;
+
+    this.socket.emit('typing', {
+      senderId: this.currentUserId,
+      recipientId: activeId,
+      isTyping
+    });
+  }
+
+  private get currentUserId(): string {
+    return this.currentUser?._id || '';
   }
 
   private scrollToBottom(): void {
     setTimeout(() => {
       if (this.scrollContainer) {
-        this.scrollContainer.nativeElement.scrollTop = 
+        this.scrollContainer.nativeElement.scrollTop =
           this.scrollContainer.nativeElement.scrollHeight;
       }
     }, 100);
