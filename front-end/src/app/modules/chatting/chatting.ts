@@ -33,6 +33,8 @@ export class Chatting implements OnInit {
   public messages = signal<any[]>([]);
   public pendingRequests = signal<any[]>([]);
   public friendsList = signal<any[]>([]);
+  public allEmails = signal<string[]>([]);
+  public showEmailSuggestions = signal<boolean>(false);
   public activeChat = signal<any>(null);
   
   // Typing State
@@ -42,6 +44,7 @@ export class Chatting implements OnInit {
   // Inputs
   public emailSearch = '';
   public newMessage = '';
+  private emailBlurTimeout: any;
 
   constructor() {
     effect(() => {
@@ -75,6 +78,7 @@ export class Chatting implements OnInit {
 
     this.loadPendingRequests();
     this.loadFriends();
+    this.loadAllEmails();
   }
 
   public filteredMessages = computed(() => {
@@ -86,6 +90,17 @@ export class Chatting implements OnInit {
       (m.senderId === currentId && m.recipientId === activeId) ||
       (m.senderId === activeId && m.recipientId === currentId)
     );
+  });
+
+  public filteredEmails = computed(() => {
+    const query = this.emailSearch.trim().toLowerCase();
+    const emails = this.allEmails();
+
+    if (!query) return emails.slice(0, 12);
+
+    return emails
+      .filter(email => email.toLowerCase().includes(query))
+      .slice(0, 12);
   });
 
   // Call this on (input) in HTML
@@ -131,14 +146,47 @@ export class Chatting implements OnInit {
     this.newMessage = '';
   }
 
-  sendRequest() {
+  sendRequest(recipientEmailInput?: string) {
+    const recipientEmail = (recipientEmailInput ?? this.emailSearch).trim();
+    if (!recipientEmail) return;
+
+    this.emailSearch = recipientEmail;
+
     this.http.post('http://localhost:5000/api/friends/request', {
       senderId: this.currentUser._id,
-      recipientEmail: this.emailSearch
+      recipientEmail
     }).subscribe({
-      next: () => { alert('Request Sent!'); this.emailSearch = ''; },
+      next: () => {
+        alert('Request Sent!');
+        this.emailSearch = '';
+        this.showEmailSuggestions.set(false);
+      },
       error: (err) => alert(err.error.message)
     });
+  }
+
+  onEmailInputFocus() {
+    if (this.emailBlurTimeout) clearTimeout(this.emailBlurTimeout);
+    this.showEmailSuggestions.set(true);
+  }
+
+  onEmailInputBlur() {
+    this.emailBlurTimeout = setTimeout(() => {
+      this.showEmailSuggestions.set(false);
+    }, 120);
+  }
+
+  onEmailSearchChange() {
+    this.showEmailSuggestions.set(true);
+  }
+
+  selectEmail(email: string) {
+    this.sendRequest(email);
+  }
+
+  loadAllEmails() {
+    this.http.get<string[]>(`http://localhost:5000/api/friends/emails/${this.currentUser._id}`)
+      .subscribe(res => this.allEmails.set(res));
   }
 
   loadPendingRequests() {

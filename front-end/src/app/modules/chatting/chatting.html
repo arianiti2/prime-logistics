@@ -3,10 +3,48 @@
   <aside class="w-80 bg-white border-r border-slate-200 flex flex-col shrink-0">
     <div class="p-4 border-b">
       <h2 class="text-lg font-bold mb-4 text-slate-800">Logistics Network</h2>
-      <div class="flex gap-2">
-        <input [(ngModel)]="emailSearch" placeholder="Invite by email..." class="flex-1 text-xs p-2 bg-slate-100 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500">
-        <button (click)='sendRequest()' class="bg-indigo-600 text-white px-3 rounded-lg text-xs hover:bg-indigo-700 transition-colors">Add</button>
+      <div class="relative">
+        <div class="flex items-center gap-0 max-w-md bg-white border border-slate-200 rounded-xl shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all p-1.5">
+          <div class="pl-3 pr-2 text-slate-400">
+            <svg xmlns="http://www.w3.org" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+
+          <input 
+            [(ngModel)]="emailSearch"
+            (focus)="onEmailInputFocus()"
+            (blur)="onEmailInputBlur()"
+            (ngModelChange)="onEmailSearchChange()"
+            (keyup.enter)="sendRequest()"
+            placeholder="Search and invite by email..."
+            class="flex-1 text-sm bg-transparent outline-none py-1.5 pr-2 placeholder:text-slate-400"
+          >
+        </div>
+
+        @if (showEmailSuggestions()) {
+          <div class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-20 overflow-hidden">
+            <div class="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b bg-slate-50">Available Emails</div>
+            <div class="max-h-52 overflow-y-auto">
+              @for (email of filteredEmails(); track email) {
+                <div class="flex items-center justify-between gap-3 px-3 py-2.5 border-b last:border-b-0 border-slate-100 hover:bg-slate-50 transition-colors">
+                  <p class="text-sm text-slate-700 truncate">{{ email }}</p>
+                  <button
+                    type="button"
+                    (mousedown)="$event.preventDefault(); sendRequest(email)"
+                    class="bg-emerald-600 text-white px-2.5 py-1 rounded-md text-[10px] font-bold hover:bg-emerald-700 active:scale-95 transition-all"
+                  >
+                    Add
+                  </button>
+                </div>
+              } @empty {
+                <p class="px-3 py-3 text-xs text-slate-400">No emails match your search.</p>
+              }
+            </div>
+          </div>
+        }
       </div>
+
     </div>
 
     <div class="flex-1 overflow-y-auto custom-scrollbar">
