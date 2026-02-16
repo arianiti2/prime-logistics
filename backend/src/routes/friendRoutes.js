@@ -4,6 +4,25 @@ const router = express.Router();
 const User = require("../models/User");
 const Friendship = require("../models/Friendship");
 
+
+router.get("/emails/:userId", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const users = await User.find({ _id: { $ne: userId } })
+      .select("email")
+      .sort({ email: 1 })
+      .lean();
+
+    const emails = users
+      .map((user) => user.email)
+      .filter(Boolean);
+
+    res.json(emails);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching user emails" });
+  }
+});
+
 // SEND REQUEST BY EMAIL
 router.post("/request", async (req, res) => {
   const { senderId, recipientEmail } = req.body;
